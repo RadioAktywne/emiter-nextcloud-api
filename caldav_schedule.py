@@ -4,7 +4,6 @@ from fastapi import FastAPI
 
 import time as t
 from datetime import datetime,timedelta,date,time
-import json
 import logging
 
 import config
@@ -18,7 +17,7 @@ class CalendarAPI:
     slug_uids = {}
 
     #default time to live in seconds
-    default_ttl = 3*60
+    default_ttl = 30*60
     ttl_stamp = 0
 
     def __init__(self) -> None:
@@ -27,6 +26,9 @@ class CalendarAPI:
         self.refresh()
 
     def refresh(self,ttl=None):
+        """
+            Gets data from calendar and converts it 
+        """
 
         if ttl is None:
             ttl = self.default_ttl
@@ -47,10 +49,6 @@ class CalendarAPI:
         replay_timeslots = self.get_slots_from_cal(self.client.calendar(url=config.url+"/calendars/"+config.user+"/emiter_powtorki"),d_from,d_to)
 
         logging.info("found %d live shows and %d replays." % (len(live_timeslots),len(replay_timeslots)))
-
-        #print(live_timeslots)
-        #print(replay_timeslots)
-
 
         #parse live shows (and programs)
         for slot in live_timeslots:
@@ -134,12 +132,18 @@ class CalendarAPI:
 
 
     def vtext_to_str(self,v):
+        """
+            Converts string of vText or None, if there is no text
+        """
         if type(v) is icalendar.vText:
             return str(v)
         else:
             return None
 
     def get_slots_from_cal(self,cal,d_from,d_to):
+        """
+            Gets iCal entries between d_from and d_to
+        """
 
         events = cal.date_search(d_from,d_to)
 
